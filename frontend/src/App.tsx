@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowUpRight,
   Bot,
+  ChevronDown,
   FileText,
   FileJson,
   LoaderCircle,
@@ -14,6 +15,8 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -382,7 +385,7 @@ export default function App() {
           </div>
         </header>
 
-        <section className="mt-6 grid flex-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <section className="mt-6 grid gap-6 lg:items-start lg:grid-cols-[360px_minmax(0,1fr)]">
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -571,7 +574,7 @@ export default function App() {
             </Card>
           </div>
 
-          <Card className="flex min-h-[60vh] flex-col overflow-hidden">
+          <Card className="overflow-hidden">
             <CardHeader className="border-b border-border/70 bg-white/50">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -601,7 +604,7 @@ export default function App() {
               </div>
             </CardHeader>
 
-            <CardContent className="flex flex-1 flex-col gap-4 p-0">
+            <CardContent className="p-0">
               {error && (
                 <div className="mx-6 mt-6 flex items-start gap-3 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -643,39 +646,37 @@ export default function App() {
                 </div>
               </div>
 
-              <Separator />
+              {(isLoading || messages.length > 0 || isSending) && (
+                <>
+                  <Separator />
 
-              <div className="flex-1 overflow-y-auto px-6 py-6">
-                {isLoading ? (
-                  <EmptyBlock
-                    icon={<LoaderCircle className="h-5 w-5 animate-spin" />}
-                    title="Loading workspace"
-                    description="Fetching indexed files, dashboard stats, and your session history."
-                  />
-                ) : messages.length ? (
-                  <div className="space-y-4">
-                    {messages.map((message, index) => (
-                      <MessageBubble
-                        key={`${message.role}-${index}`}
-                        message={message}
+                  <div className="max-h-[52rem] overflow-y-auto px-6 py-6">
+                    {isLoading ? (
+                      <EmptyBlock
+                        icon={<LoaderCircle className="h-5 w-5 animate-spin" />}
+                        title="Loading workspace"
+                        description="Fetching indexed files, dashboard stats, and your session history."
                       />
-                    ))}
-                    {isSending && (
-                      <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                        Searching the indexed documents...
+                    ) : (
+                      <div className="space-y-4">
+                        {messages.map((message, index) => (
+                          <MessageBubble
+                            key={`${message.role}-${index}`}
+                            message={message}
+                          />
+                        ))}
+                        {isSending && (
+                          <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                            Searching the indexed documents...
+                          </div>
+                        )}
+                        <div ref={messagesEndRef} />
                       </div>
                     )}
-                    <div ref={messagesEndRef} />
                   </div>
-                ) : (
-                  <EmptyBlock
-                    icon={<Bot className="h-5 w-5" />}
-                    title="Ask your first document question"
-                    description="Once your PDFs are indexed, answers will include grounded source snippets and page numbers."
-                  />
-                )}
-              </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </section>
@@ -747,16 +748,58 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
       </div>
 
-      <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-        {message.content}
-      </p>
+      {isAssistant ? (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            p: ({ children }) => (
+              <p className="mb-4 text-sm leading-7 text-slate-700 last:mb-0">
+                {children}
+              </p>
+            ),
+            ul: ({ children }) => (
+              <ul className="mb-4 list-disc space-y-2 pl-5 text-sm leading-7 text-slate-700 last:mb-0">
+                {children}
+              </ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="mb-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-700 last:mb-0">
+                {children}
+              </ol>
+            ),
+            li: ({ children }) => <li>{children}</li>,
+            strong: ({ children }) => (
+              <strong className="font-semibold text-slate-900">{children}</strong>
+            ),
+            em: ({ children }) => <em className="italic">{children}</em>,
+            code: ({ children }) => (
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[0.9em] text-slate-800">
+                {children}
+              </code>
+            ),
+          }}
+        >
+          {message.content}
+        </ReactMarkdown>
+      ) : (
+        <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+          {message.content}
+        </p>
+      )}
 
       {!!message.sources?.length && (
-        <div className="mt-4 rounded-[1.25rem] border border-border/70 bg-secondary/40 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Sources
-          </p>
-          <div className="space-y-3">
+        <details className="group mt-4 rounded-[1.25rem] border border-border/70 bg-secondary/40 p-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Sources
+              </p>
+              <Badge variant="outline">{message.sources.length}</Badge>
+            </div>
+            <ChevronDown className="h-4 w-4 text-slate-500 transition group-open:rotate-180" />
+          </summary>
+
+          <div className="mt-4 space-y-3">
             {message.sources.map((source) => (
               <div
                 key={source.id}
@@ -773,7 +816,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               </div>
             ))}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
@@ -789,16 +832,14 @@ function EmptyBlock({
   description: string;
 }) {
   return (
-    <>
-      {/* <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-border bg-white/60 px-6 py-8 text-center">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
-          {icon}
-        </div>
-        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-        <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-          {description}
-        </p>
-      </div> */}
-    </>
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-border bg-white/60 px-6 py-8 text-center">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+      <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+    </div>
   );
 }
