@@ -417,7 +417,7 @@ def get_embeddings() -> GoogleGenerativeAIEmbeddings:
 @lru_cache(maxsize=1)
 def get_llm() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model="gemini-3.1-pro-preview",
         google_api_key=os.getenv("GEMINI_API_KEY"),
         temperature=0,
     )

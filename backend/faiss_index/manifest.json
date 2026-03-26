@@ -1,11 +1,10 @@
 {
-  "built_at": "2026-03-26T09:24:25.750629+00:00",
-  "chunk_count": 16,
-  "file_count": 4,
+  "built_at": "2026-03-26T10:59:52.447258+00:00",
+  "chunk_count": 5,
+  "file_count": 3,
   "files": [
-    "Invoice And Billing_RAG.pdf",
-    "Maiyani Vivekananda-Payslip - Jan-2026.pdf",
-    "invoice_0_charspace_1.pdf",
-    "invoice_4_color_B_253.pdf"
+    "invoice_0.pdf",
+    "invoice_1.pdf",
+    "invoice_2.pdf"
   ]
 }
