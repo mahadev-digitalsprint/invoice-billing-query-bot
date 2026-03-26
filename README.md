@@ -1,152 +1,110 @@
-# Document Parser
+# Invoice Billing Query Bot
 
-A document Q&A app for PDF files with:
+A clean full-stack project with:
 
-- FastAPI backend
-- Built-in web UI served by FastAPI
-- Optional Streamlit UI
-- FAISS vector search
-- Gemini-based answering with source grounding
+- `backend/` for FastAPI, RAG, invoice extraction, and backend runtime data
+- `frontend/` for the React + Vite + TypeScript UI
+- structured invoice JSON extraction on upload
+- FAISS-backed document retrieval with Gemini answering
+
+## Structure
+
+```text
+backend/
+  api.py
+  rag_service.py
+  requirements.txt
+  uploads/
+  structured_data/
+  faiss_index/
+  static/
+frontend/
+  src/
+  package.json
+```
 
 ## Requirements
 
 - Python 3.12 or 3.13 recommended
-- Windows PowerShell
-- A valid `GEMINI_API_KEY`
+- Node.js 18+
+- `GEMINI_API_KEY` in `.env`
 
-## Setup
+## Setup Commands
 
-### 1. Open the project
+Backend install:
 
-```powershell
-cd C:\Users\wellcome\Desktop\Document_Parser
+```bash
+source venv/bin/activate
+pip install -r backend/requirements.txt
 ```
 
-### 2. Activate the virtual environment
+Frontend install:
 
-```powershell
-.\venv\Scripts\Activate.ps1
+```bash
+cd frontend
+npm install
 ```
 
-### 3. Install dependencies
+## Run Commands
 
-```powershell
-pip install -r requirements.txt
+Start backend:
+
+```bash
+source venv/bin/activate
+python -m uvicorn backend.api:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-### 4. Add your Gemini API key
+Start frontend:
 
-Create or update `.env`:
-
-```env
-GEMINI_API_KEY=your_api_key_here
+```bash
+cd frontend
+source ../venv/bin/activate
+source ~/.zshrc
+npm run dev
 ```
 
-## Run The FastAPI App
+Build frontend for FastAPI:
 
-This is the main version now. It serves both the API and the browser UI.
-
-```powershell
-.\venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8010
+```bash
+cd frontend
+npm run build
 ```
 
-Open:
+Compile-check backend:
 
-[http://127.0.0.1:8010](http://127.0.0.1:8010)
-
-Useful endpoints:
-
-- `/`
-- `/health`
-- `/dashboard`
-- `/files`
-- `/docs`
-
-## Run The Streamlit App
-
-If you want the Streamlit interface instead:
-
-```powershell
-.\venv\Scripts\streamlit.exe run streamlit_app.py --server.headless true --server.port 8501
+```bash
+source venv/bin/activate
+python -m compileall backend
 ```
 
-Open:
+## URLs
 
-[http://127.0.0.1:8501](http://127.0.0.1:8501)
+- Frontend dev UI: `http://127.0.0.1:5173`
+- Backend API: `http://127.0.0.1:8001`
+- Swagger docs: `http://127.0.0.1:8001/docs`
 
-## Common Commands
+## API Endpoints
 
-### Start FastAPI on the default project port
+- `GET /api/health`
+- `GET /api/dashboard`
+- `GET /api/files`
+- `GET /api/invoices`
+- `GET /api/invoices/{json_file}`
+- `POST /api/upload`
+- `POST /api/chat`
+- `GET /api/history/{session_id}`
+- `DELETE /api/history/{session_id}`
 
-```powershell
-.\venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8001
-```
+## Invoice Flow
 
-### Start FastAPI with auto reload
+When you upload a PDF invoice, the backend:
 
-```powershell
-.\venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8010 --reload
-```
-
-### Start Streamlit
-
-```powershell
-.\venv\Scripts\streamlit.exe run streamlit_app.py --server.port 8501
-```
-
-### Compile-check Python files
-
-```powershell
-.\venv\Scripts\python.exe -m compileall api.py app.py main.py rag_service.py streamlit_app.py
-```
-
-## Project Files
-
-- `api.py`: FastAPI app and routes
-- `rag_service.py`: indexing, retrieval, history, and grounded answer pipeline
-- `streamlit_app.py`: Streamlit UI
-- `static/`: FastAPI-served frontend UI
-- `uploads/`: uploaded PDF files
-- `faiss_index/`: saved FAISS index
-
-## Troubleshooting
-
-### Port already in use
-
-Run on a different port:
-
-```powershell
-.\venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8010
-```
-
-or:
-
-```powershell
-.\venv\Scripts\streamlit.exe run streamlit_app.py --server.port 8502
-```
-
-### FastAPI shows JSON instead of UI
-
-Make sure you are opening the FastAPI root page:
-
-[http://127.0.0.1:8010/](http://127.0.0.1:8010/)
-
-and not `/health`.
-
-### No answers from the model
-
-Check:
-
-- `.env` contains a valid `GEMINI_API_KEY`
-- internet access is available for Gemini calls
-- PDFs have been uploaded and indexed
-
-### Rebuild the index
-
-Upload PDFs again from the UI, or restart the app and re-index through the interface.
+1. extracts structured invoice fields with Gemini
+2. saves the JSON in `backend/structured_data/`
+3. rebuilds the FAISS index in `backend/faiss_index/`
+4. answers chat from structured data first, then raw PDF evidence
 
 ## Notes
 
-- FastAPI is the primary app now.
-- Streamlit is available as an optional interface.
-- The app stores uploaded files in `uploads/` and the vector index in `faiss_index/`.
+- The old Streamlit code has been removed.
+- Backend code and backend-owned files now live under `backend/`.

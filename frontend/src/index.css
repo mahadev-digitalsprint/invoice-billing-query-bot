@@ -1,0 +1,51 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 33% 97%;
+    --foreground: 216 29% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 216 29% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 29% 17%;
+    --primary: 194 79% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 39 87% 94%;
+    --secondary-foreground: 24 10% 20%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 156 45% 94%;
+    --accent-foreground: 165 69% 20%;
+    --border: 32 26% 85%;
+    --input: 32 26% 85%;
+    --ring: 194 79% 28%;
+    --success: 160 84% 32%;
+    --warning: 29 92% 52%;
+    --danger: 0 70% 56%;
+    --radius: 1.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background bg-page-radial text-foreground antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .grain-overlay {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+  }
+}

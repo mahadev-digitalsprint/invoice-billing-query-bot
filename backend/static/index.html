@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frontend Build Needed</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Manrope", system-ui, sans-serif;
+      background: #fffaf2;
+      color: #1e293b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(251, 191, 36, 0.25), transparent 32%),
+        radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 28%),
+        linear-gradient(180deg, #fffdf8 0%, #fff7ed 100%);
+    }
+    main {
+      width: min(760px, 100%);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin: 0 0 12px;
+    }
+    p {
+      color: #475569;
+      line-height: 1.7;
+    }
+    code {
+      background: #f8fafc;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.95em;
+    }
+    ol {
+      padding-left: 20px;
+      color: #334155;
+      line-height: 1.8;
+    }
+    a { color: #0f766e; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>React frontend is ready to be built.</h1>
+    <p>
+      This FastAPI server will automatically serve the new Vite app from
+      <code>frontend/dist</code> once it exists. Right now you are seeing this
+      fallback page because the frontend bundle has not been generated yet.
+    </p>
+    <ol>
+      <li>Install Node.js 18+ on this machine.</li>
+      <li>Run <code>cd frontend</code>.</li>
+      <li>Run <code>npm install</code>.</li>
+      <li>Run <code>npm run dev</code> for local development or <code>npm run build</code> to let FastAPI serve it.</li>
+    </ol>
+    <p>
+      API docs are still available at <a href="/docs">/docs</a>, and the app endpoints
+      live under <code>/api</code>, for example <code>/api/upload</code> and <code>/api/chat</code>.
+    </p>
+  </main>
+</body>
+</html>

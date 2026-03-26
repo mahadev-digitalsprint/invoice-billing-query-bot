@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+backend/__pycache__/
+frontend/node_modules
+frontend/dist
+.vite
+.env
+frontend/*.tsbuildinfo
+frontend/*.js
+frontend/*.d.ts
+backend/structured_data/*.json
+backend/faiss_index/*.faiss
+backend/faiss_index/*.pkl
