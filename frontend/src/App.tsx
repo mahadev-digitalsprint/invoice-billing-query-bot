@@ -506,7 +506,7 @@ export default function App() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileJson className="h-5 w-5 text-primary" />
@@ -580,7 +580,7 @@ export default function App() {
                   </button>
                 ))}
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           <Card className="overflow-hidden">
@@ -780,7 +780,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             ),
             li: ({ children }) => <li>{children}</li>,
             strong: ({ children }) => (
-              <strong className="font-semibold text-slate-900">{children}</strong>
+              <strong className="font-semibold text-slate-900">
+                {children}
+              </strong>
             ),
             em: ({ children }) => <em className="italic">{children}</em>,
             code: ({ children }) => (
