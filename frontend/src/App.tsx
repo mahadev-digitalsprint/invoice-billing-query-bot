@@ -80,10 +80,12 @@ const API_BASE_URL = import.meta.env.DEV
   : "";
 
 function apiUrl(path: string) {
+  /** Builds an API URL that works in both Vite dev mode and built mode. */
   return `${API_BASE_URL}${path}`;
 }
 
 async function readJsonOrThrow(response: Response, requestPath: string) {
+  /** Parses JSON responses and turns HTTP/API failures into readable UI errors. */
   const contentType = response.headers.get("content-type") ?? "";
   const rawText = await response.text();
 
@@ -118,6 +120,7 @@ async function readJsonOrThrow(response: Response, requestPath: string) {
 }
 
 function getSessionId() {
+  /** Reuses the browser session id or creates one so chat history stays tied to this client. */
   const stored = window.localStorage.getItem("invoice-bot-session");
   if (stored) {
     return stored;
@@ -133,6 +136,7 @@ function getSessionId() {
 }
 
 export default function App() {
+  /** Main screen that coordinates dashboard loading, uploads, and document chat. */
   const [dashboard, setDashboard] = useState<DashboardData>(defaultDashboard);
   const [files, setFiles] = useState<string[]>([]);
   const [invoices, setInvoices] = useState<StructuredInvoiceSummary[]>([]);
@@ -161,6 +165,7 @@ export default function App() {
   }, [messages, isSending]);
 
   async function refreshAll() {
+    /** Reloads dashboard stats, indexed files, structured invoices, and chat history together. */
     setIsLoading(true);
     setError("");
 
@@ -216,6 +221,7 @@ export default function App() {
   }
 
   async function handleUpload() {
+    /** Sends selected PDFs to the backend and refreshes the workspace after indexing finishes. */
     if (!uploadQueue.length) {
       setError("Choose one or more PDF files before indexing.");
       return;
@@ -255,6 +261,7 @@ export default function App() {
   }
 
   async function handleSubmit(nextQuestion?: string) {
+    /** Sends a user question to the backend and appends the grounded answer to chat. */
     const prompt = (nextQuestion ?? question).trim();
     if (!prompt) {
       setError("Enter a question about your uploaded documents.");
@@ -305,6 +312,7 @@ export default function App() {
   }
 
   async function refreshDashboardOnly() {
+    /** Refreshes just the top-level counters after chat actions without reloading everything. */
     try {
       const response = await fetch(apiUrl("/api/dashboard"));
       const payload = (await readJsonOrThrow(
@@ -318,6 +326,7 @@ export default function App() {
   }
 
   async function clearChat() {
+    /** Clears the current session history both in the backend and the local UI state. */
     setError("");
 
     try {
@@ -694,6 +703,7 @@ function MetricCard({
   value: number;
   tone: "amber" | "teal" | "slate";
 }) {
+  /** Displays a single dashboard stat card with a small visual tone variant. */
   const toneClassName =
     tone === "amber"
       ? "bg-amber-50 text-amber-700"
@@ -714,6 +724,7 @@ function MetricCard({
 }
 
 function MessageBubble({ message }: { message: ChatMessage }) {
+  /** Renders one chat message and optionally shows the supporting source snippets. */
   const isAssistant = message.role === "assistant";
 
   return (
@@ -831,6 +842,7 @@ function EmptyBlock({
   title: string;
   description: string;
 }) {
+  /** Renders the reusable empty/loading state used across the UI panels. */
   return (
     <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-border bg-white/60 px-6 py-8 text-center">
       <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">

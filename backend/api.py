@@ -24,14 +24,17 @@ INDEX_FILE = STATIC_DIR / "index.html"
 
 
 class ChatRequest(BaseModel):
+    """Represents a chat question plus the browser session it belongs to."""
+
     question: str = Field(..., min_length=1)
     session_id: str = Field(default="default", min_length=1)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    """Runs one-time startup work before the API starts serving requests."""
+
     await asyncio.to_thread(service.ensure_default_index)
-    await asyncio.to_thread(service.ensure_structured_data)
     yield
 
 
@@ -56,6 +59,8 @@ app.mount(
 
 @app.get("/", include_in_schema=False)
 async def index():
+    """Serves the built frontend when available, otherwise the static fallback page."""
+
     if FRONTEND_INDEX_FILE.exists():
         return FileResponse(FRONTEND_INDEX_FILE)
     return FileResponse(INDEX_FILE)
@@ -63,27 +68,37 @@ async def index():
 
 @app.get("/api/health")
 async def health():
+    """Returns a health response along with current dashboard counters."""
+
     dashboard = service.get_dashboard_data()
     return {"status": "ok", **dashboard}
 
 
 @app.get("/api/dashboard")
 async def dashboard():
+    """Returns backend metrics used by the dashboard cards."""
+
     return service.get_dashboard_data()
 
 
 @app.get("/api/files")
 async def list_files():
+    """Lists PDF files currently available for indexing and retrieval."""
+
     return {"files": service.list_pdf_files()}
 
 
 @app.get("/api/invoices")
 async def list_invoices():
+    """Lists saved structured invoice summaries for the frontend sidebar."""
+
     return {"invoices": service.list_structured_invoices()}
 
 
 @app.get("/api/invoices/{json_name}")
 async def get_invoice(json_name: str):
+    """Returns one structured invoice JSON file by name."""
+
     try:
         return service.get_structured_invoice(json_name)
     except FileNotFoundError as exc:
@@ -95,6 +110,8 @@ async def get_invoice(json_name: str):
 
 @app.post("/api/upload")
 async def upload_files(files: list[UploadFile] = File(...)):
+    """Saves uploaded PDFs, extracts structured data, and rebuilds the vector index."""
+
     saved: list[str] = []
     errors: list[str] = []
 
@@ -141,6 +158,8 @@ async def upload_files(files: list[UploadFile] = File(...)):
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
+    """Answers a user question using the indexed invoices and chat history."""
+
     if not service.vectorstore_ready():
         raise HTTPException(
             status_code=400,
@@ -164,11 +183,15 @@ async def chat(request: ChatRequest):
 
 @app.get("/api/history/{session_id}")
 async def get_history(session_id: str):
+    """Returns chat messages stored for a given session id."""
+
     return {"session_id": session_id, "messages": get_history_messages(session_id)}
 
 
 @app.delete("/api/history/{session_id}")
 async def clear_history(session_id: str):
+    """Clears the stored chat messages for a given session id."""
+
     clear_session_history(session_id)
     return {"message": f"History cleared for session '{session_id}'."}
 
