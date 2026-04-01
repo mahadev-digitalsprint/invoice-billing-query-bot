@@ -21,6 +21,7 @@ STATIC_DIR = BASE_DIR / "static"
 FRONTEND_DIST_DIR = BASE_DIR.parent / "frontend" / "dist"
 FRONTEND_INDEX_FILE = FRONTEND_DIST_DIR / "index.html"
 INDEX_FILE = STATIC_DIR / "index.html"
+QUOTA_EXCEEDED_MESSAGE = "You exceeded your current quota, please check your plan and billing details."
 
 
 class ChatRequest(BaseModel):
@@ -28,6 +29,22 @@ class ChatRequest(BaseModel):
 
     question: str = Field(..., min_length=1)
     session_id: str = Field(default="default", min_length=1)
+
+
+def get_friendly_error_message(exc: Exception, default_message: str) -> str:
+    """Returns a short user-friendly message for common provider/API failures."""
+
+    error_text = str(exc)
+    quota_markers = (
+        "RESOURCE_EXHAUSTED",
+        "quota",
+        "429",
+        "billing details",
+        "rate limit",
+    )
+    if any(marker.lower() in error_text.lower() for marker in quota_markers):
+        return QUOTA_EXCEEDED_MESSAGE
+    return default_message
 
 
 @asynccontextmanager
@@ -88,29 +105,9 @@ async def list_files():
     return {"files": service.list_pdf_files()}
 
 
-@app.get("/api/invoices")
-async def list_invoices():
-    """Lists saved structured invoice summaries for the frontend sidebar."""
-
-    return {"invoices": service.list_structured_invoices()}
-
-
-@app.get("/api/invoices/{json_name}")
-async def get_invoice(json_name: str):
-    """Returns one structured invoice JSON file by name."""
-
-    try:
-        return service.get_structured_invoice(json_name)
-    except FileNotFoundError as exc:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Structured invoice JSON not found: {json_name}",
-        ) from exc
-
-
 @app.post("/api/upload")
 async def upload_files(files: list[UploadFile] = File(...)):
-    """Saves uploaded PDFs, extracts structured data, and rebuilds the vector index."""
+    """Saves uploaded PDFs and rebuilds the vector index."""
 
     saved: list[str] = []
     errors: list[str] = []
@@ -135,23 +132,20 @@ async def upload_files(files: list[UploadFile] = File(...)):
         )
 
     try:
-        structured_summary = await asyncio.to_thread(
-            service.extract_structured_invoices,
-            saved,
-        )
         summary = await asyncio.to_thread(service.rebuild_vectorstore)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Index rebuild failed: {exc}",
+            detail=get_friendly_error_message(
+                exc,
+                f"Index rebuild failed: {exc}",
+            ),
         ) from exc
 
     return {
         "saved": saved,
         "errors": errors,
         "message": f"Indexed {summary['chunk_count']} chunks from {summary['file_count']} PDF files.",
-        "structured_files": structured_summary["extracted"],
-        "structured_errors": structured_summary["errors"],
         **summary,
     }
 
@@ -175,7 +169,10 @@ async def chat(request: ChatRequest):
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Chat request failed: {exc}",
+            detail=get_friendly_error_message(
+                exc,
+                f"Chat request failed: {exc}",
+            ),
         ) from exc
 
     return {"session_id": request.session_id, **result}

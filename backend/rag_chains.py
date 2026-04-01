@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
-from backend.rag_prompts import ANSWER_PROMPT, EXTRACTION_PROMPT, REWRITE_PROMPT
+from backend.rag_prompts import ANSWER_PROMPT, REWRITE_PROMPT
 
 load_dotenv()
 
@@ -43,10 +43,3 @@ def get_answer_chain():
     """Builds the chain that turns retrieved context into a grounded answer."""
 
     return ANSWER_PROMPT | get_llm() | StrOutputParser()
-
-
-@lru_cache(maxsize=1)
-def get_extraction_chain():
-    """Builds the chain that converts raw PDF text into structured invoice JSON."""
-
-    return EXTRACTION_PROMPT | get_llm() | StrOutputParser()

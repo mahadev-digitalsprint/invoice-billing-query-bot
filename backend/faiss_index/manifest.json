@@ -1,10 +1,10 @@
 {
-  "built_at": "2026-03-26T10:59:52.447258+00:00",
-  "chunk_count": 5,
+  "built_at": "2026-04-01T06:11:30.879831+00:00",
+  "chunk_count": 14,
   "file_count": 3,
   "files": [
-    "invoice_0.pdf",
-    "invoice_1.pdf",
-    "invoice_2.pdf"
+    "Invoice And Billing_RAG.pdf",
+    "invoice_998_charspace_999.pdf",
+    "invoice_999_charspace_1000.pdf"
   ]
 }

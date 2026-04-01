@@ -2,16 +2,13 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
-  ArrowUpRight,
   Bot,
   ChevronDown,
   FileText,
-  FileJson,
   LoaderCircle,
   MessageSquareText,
   RefreshCcw,
   Send,
-  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -49,16 +46,6 @@ type DashboardData = {
   chunk_count: number;
   sessions: number;
   messages: number;
-  structured_invoice_count?: number;
-};
-
-type StructuredInvoiceSummary = {
-  source_file: string;
-  json_file: string;
-  invoice_number?: string | null;
-  issue_date?: string | null;
-  currency?: string | null;
-  gross_total?: string | null;
 };
 
 const defaultDashboard: DashboardData = {
@@ -66,14 +53,7 @@ const defaultDashboard: DashboardData = {
   chunk_count: 0,
   sessions: 0,
   messages: 0,
-  structured_invoice_count: 0,
 };
-
-const starterQuestions = [
-  "Summarize the uploaded invoice in plain language.",
-  "Which pages mention the billing amount or due date?",
-  "List the customer details found across the documents.",
-];
 
 const API_BASE_URL = import.meta.env.DEV
   ? (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8001")
@@ -139,7 +119,6 @@ export default function App() {
   /** Main screen that coordinates dashboard loading, uploads, and document chat. */
   const [dashboard, setDashboard] = useState<DashboardData>(defaultDashboard);
   const [files, setFiles] = useState<string[]>([]);
-  const [invoices, setInvoices] = useState<StructuredInvoiceSummary[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
   const [uploadQueue, setUploadQueue] = useState<File[]>([]);
@@ -165,20 +144,14 @@ export default function App() {
   }, [messages, isSending]);
 
   async function refreshAll() {
-    /** Reloads dashboard stats, indexed files, structured invoices, and chat history together. */
+    /** Reloads dashboard stats, indexed files, and chat history together. */
     setIsLoading(true);
     setError("");
 
     try {
-      const [
-        dashboardResponse,
-        filesResponse,
-        invoicesResponse,
-        historyResponse,
-      ] = await Promise.all([
+      const [dashboardResponse, filesResponse, historyResponse] = await Promise.all([
         fetch(apiUrl("/api/dashboard")),
         fetch(apiUrl("/api/files")),
-        fetch(apiUrl("/api/invoices")),
         fetch(apiUrl(`/api/history/${sessionIdRef.current}`)),
       ]);
 
@@ -192,12 +165,6 @@ export default function App() {
       )) as {
         files: string[];
       };
-      const invoicesData = (await readJsonOrThrow(
-        invoicesResponse,
-        "/api/invoices",
-      )) as {
-        invoices: StructuredInvoiceSummary[];
-      };
       const historyData = (await readJsonOrThrow(
         historyResponse,
         `/api/history/${sessionIdRef.current}`,
@@ -207,7 +174,6 @@ export default function App() {
 
       setDashboard(dashboardData);
       setFiles(filesData.files);
-      setInvoices(invoicesData.invoices ?? []);
       setMessages(historyData.messages ?? []);
     } catch (refreshError) {
       const message =
@@ -360,16 +326,15 @@ export default function App() {
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <h1 className="font-display text-4xl leading-tight text-slate-900 sm:text-5xl">
-                Invoice & Billing Query Chat Bot.
+                Simple PDF RAG Chat Bot.
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Upload PDFs, inspect index health, and chat with grounded
-                answers from the same FastAPI backend. The layout adapts cleanly
-                from phones to large screens.
+                Upload PDFs, split them into chunks, store them in the vector
+                database, and ask questions from the same FastAPI backend.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xxl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xxl:grid-cols-3">
               <MetricCard
                 label="Indexed files"
                 value={dashboard.indexed_file_count}
@@ -384,11 +349,6 @@ export default function App() {
                 label="Stored messages"
                 value={dashboard.messages}
                 tone="slate"
-              />
-              <MetricCard
-                label="JSON records"
-                value={dashboard.structured_invoice_count ?? invoices.length}
-                tone="teal"
               />
             </div>
           </div>
@@ -505,82 +465,6 @@ export default function App() {
                 )}
               </CardContent>
             </Card>
-
-            {/* <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileJson className="h-5 w-5 text-primary" />
-                  Extracted JSON
-                </CardTitle>
-                <CardDescription>
-                  Structured invoice records saved on the backend after upload.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {invoices.length ? (
-                  invoices.map((invoice) => (
-                    <a
-                      key={invoice.json_file}
-                      className="block rounded-[1.5rem] border border-border/70 bg-white/70 px-4 py-3 transition hover:border-primary/30 hover:bg-accent"
-                      href={apiUrl(`/api/invoices/${invoice.json_file}`)}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">
-                            {invoice.invoice_number || invoice.source_file}
-                          </p>
-                          <p className="mt-1 truncate text-xs text-slate-500">
-                            {invoice.source_file}
-                          </p>
-                          <p className="mt-2 text-xs text-slate-600">
-                            Date: {invoice.issue_date || "unknown"} | Total:{" "}
-                            {invoice.gross_total || "unknown"}{" "}
-                            {invoice.currency || ""}
-                          </p>
-                        </div>
-                        <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      </div>
-                    </a>
-                  ))
-                ) : (
-                  <EmptyBlock
-                    icon={<FileJson className="h-5 w-5" />}
-                    title="No JSON extracted yet"
-                    description="Upload an invoice PDF and the backend will save a structured JSON version automatically."
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Suggested prompts
-                </CardTitle>
-                <CardDescription>
-                  Start with a quick question and refine from there.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {starterQuestions.map((item) => (
-                  <button
-                    key={item}
-                    className="w-full rounded-[1.5rem] border border-border/70 bg-white/70 px-4 py-3 text-left text-sm text-slate-700 transition hover:border-primary/30 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={isSending}
-                    onClick={() => void handleSubmit(item)}
-                    type="button"
-                  >
-                    <span className="flex items-start justify-between gap-3">
-                      <span>{item}</span>
-                      <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    </span>
-                  </button>
-                ))}
-              </CardContent>
-            </Card> */}
           </div>
 
           <Card className="overflow-hidden">
@@ -592,8 +476,7 @@ export default function App() {
                     Document chat
                   </CardTitle>
                   <CardDescription>
-                    Ask questions about invoice totals, line items, customer
-                    info, or due dates.
+                    Ask questions about anything found in the uploaded PDFs.
                   </CardDescription>
                 </div>
 
@@ -626,13 +509,13 @@ export default function App() {
                   <Textarea
                     className="min-h-[120px] border-0 bg-transparent p-2 shadow-none focus-visible:ring-0"
                     onChange={(event) => setQuestion(event.target.value)}
-                    placeholder="Ask about totals, billing periods, invoice IDs, contact details, or anything found in the PDFs..."
+                    placeholder="Ask anything about the uploaded PDFs..."
                     value={question}
                   />
                   <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-slate-500">
-                      Tip: mention a field like invoice number, amount, vendor,
-                      page, or date to get a more precise answer.
+                      Tip: ask about names, dates, amounts, pages, or summaries
+                      for better results.
                     </p>
                     <Button
                       className="sm:min-w-40"
