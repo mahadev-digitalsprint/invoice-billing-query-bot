@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowDown,
+  ArrowUp,
   Bot,
   ChevronDown,
   FileText,
@@ -19,14 +20,12 @@ import remarkGfm from "remark-gfm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
 type Source = {
@@ -136,13 +135,6 @@ export default function App() {
     sessionIdRef.current = getSessionId();
     void refreshAll();
   }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [messages, isSending]);
 
   async function refreshAll() {
     /** Reloads dashboard stats, indexed files, and chat history together. */
@@ -320,6 +312,8 @@ export default function App() {
     }
   }
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
   return (
     <main className="grain-overlay h-screen overflow-hidden">
       <div className="mx-auto flex h-screen max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -356,75 +350,76 @@ export default function App() {
           </div>
         </header>
 
-        <section className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
-          <div className="grid mt-6 gap-6 lg:items-start lg:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5 text-primary" />
-                    Index PDFs
-                  </CardTitle>
-                  <CardDescription>
-                    Upload one or more billing documents and rebuild the vector
-                    index in one step.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <label className="block rounded-[1.5rem] border border-dashed border-border bg-secondary/40 p-4 text-sm text-slate-600 ">
-                    <span className="mb-2 block font-medium text-slate-900">
-                      Choose PDF files
-                    </span>
-                    <Input
-                      className="cursor-pointer"
-                      accept=".pdf"
-                      multiple
-                      ref={uploadInputRef}
-                      type="file"
-                      onChange={(event) =>
-                        setUploadQueue(Array.from(event.target.files ?? []))
-                      }
-                    />
-                  </label>
+        <section
+          ref={scrollContainerRef}
+          className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1"
+        >
+          <div className="grid mt-6 gap-6 lg:grid-cols-2 ">
+            <div className="border rounded-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-primary" />
+                  Index PDFs
+                </CardTitle>
+                <CardDescription>
+                  Upload one or more billing documents and rebuild the vector
+                  index in one step.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label className="block rounded-[1.5rem] border border-dashed border-border bg-secondary/40 p-4 text-sm text-slate-600 ">
+                  <span className="mb-2 block font-medium text-slate-900">
+                    Choose PDF files
+                  </span>
+                  <Input
+                    className="cursor-pointer"
+                    accept=".pdf"
+                    multiple
+                    ref={uploadInputRef}
+                    type="file"
+                    onChange={(event) =>
+                      setUploadQueue(Array.from(event.target.files ?? []))
+                    }
+                  />
+                </label>
 
-                  {!!uploadQueue.length && (
-                    <div className="flex flex-wrap gap-2 cursor-pointer">
-                      {uploadQueue.map((file) => (
-                        <Badge key={file.name} variant="secondary">
-                          {file.name}
-                        </Badge>
-                      ))}
-                    </div>
+                {!!uploadQueue.length && (
+                  <div className="flex flex-wrap gap-2 cursor-pointer">
+                    {uploadQueue.map((file) => (
+                      <Badge key={file.name} variant="secondary">
+                        {file.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <Button
+                  className="w-full"
+                  disabled={isUploading}
+                  onClick={handleUpload}
+                >
+                  {isUploading ? (
+                    <>
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      Indexing documents
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Upload and index
+                    </>
                   )}
+                </Button>
 
-                  <Button
-                    className="w-full"
-                    disabled={isUploading}
-                    onClick={handleUpload}
-                  >
-                    {isUploading ? (
-                      <>
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                        Indexing documents
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4" />
-                        Upload and index
-                      </>
-                    )}
-                  </Button>
-
-                  {uploadStatus && (
-                    <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                      {uploadStatus}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                {uploadStatus && (
+                  <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {uploadStatus}
+                  </p>
+                )}
+              </CardContent>
             </div>
 
-            <Card>
+            <div className="border rounded-lg">
               <CardHeader className="flex-row items-center justify-between space-y-0">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -468,10 +463,11 @@ export default function App() {
                   />
                 )}
               </CardContent>
-            </Card>
+            </div>
           </div>
-          <Card className="mt-6">
-            <CardHeader className="border-b border-border/70 bg-white/50">
+
+          <div className="mt-6 border rounded-lg">
+            <CardHeader className="border-border/70 bg-white/50">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -532,8 +528,9 @@ export default function App() {
                 </div>
               </div>
             </CardHeader>
-          </Card>
-          <Card className="mt-6">
+          </div>
+
+          <div className="mt-6 border rounded-lg mb-[60px]">
             <CardContent className="p-0">
               {error && (
                 <div className="mx-6 mt-6 flex items-start gap-3 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -544,37 +541,49 @@ export default function App() {
 
               {(isLoading || messages.length > 0 || isSending) && (
                 <>
-                  <Separator />
+                  <div className="px-6 py-6">
+                    {isLoading ? (
+                      <EmptyBlock
+                        icon={<LoaderCircle className="h-5 w-5 animate-spin" />}
+                        title="Loading workspace"
+                        description="Fetching indexed files, dashboard stats, and your session history."
+                      />
+                    ) : (
+                      <div className="space-y-4">
+                        {messages.map((message, index) => (
+                          <MessageBubble
+                            key={`${message.role}-${index}`}
+                            message={message}
+                          />
+                        ))}
+                        {isSending && (
+                          <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                            Searching the indexed documents...
+                          </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="relative">
-                    <div className="max-h-[52rem] overflow-y-auto px-6 py-6">
-                      {isLoading ? (
-                        <EmptyBlock
-                          icon={
-                            <LoaderCircle className="h-5 w-5 animate-spin" />
-                          }
-                          title="Loading workspace"
-                          description="Fetching indexed files, dashboard stats, and your session history."
-                        />
-                      ) : (
-                        <div className="space-y-4">
-                          {messages.map((message, index) => (
-                            <MessageBubble
-                              key={`${message.role}-${index}`}
-                              message={message}
-                            />
-                          ))}
-                          {isSending && (
-                            <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
-                              <LoaderCircle className="h-4 w-4 animate-spin" />
-                              Searching the indexed documents...
-                            </div>
-                          )}
-                          <div ref={messagesEndRef} />
-                        </div>
-                      )}
-                    </div>
+                  <div className="absolute bottom-5 right-5 flex flex-col gap-3">
+                    {/* Scroll to Top */}
+                    <button
+                      type="button"
+                      aria-label="Scroll to top"
+                      onClick={() =>
+                        scrollContainerRef.current?.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        })
+                      }
+                      className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-300/70 bg-slate-900/85 text-white shadow-lg transition hover:bg-slate-800"
+                    >
+                      <ArrowUp className="h-6 w-6" />
+                    </button>
 
+                    {/* Scroll to Bottom */}
                     <button
                       type="button"
                       aria-label="Scroll to bottom"
@@ -584,7 +593,7 @@ export default function App() {
                           block: "end",
                         })
                       }
-                      className="absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-full border border-slate-300/70 bg-slate-900/85 text-white shadow-lg transition hover:bg-slate-800"
+                      className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-300/70 bg-slate-900/85 text-white shadow-lg transition hover:bg-slate-800"
                     >
                       <ArrowDown className="h-6 w-6" />
                     </button>
@@ -592,7 +601,7 @@ export default function App() {
                 </>
               )}
             </CardContent>
-          </Card>
+          </div>
         </section>
       </div>
     </main>
