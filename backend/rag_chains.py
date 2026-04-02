@@ -25,7 +25,7 @@ def get_llm() -> ChatGoogleGenerativeAI:
     """Creates and caches the Gemini chat model used for extraction and answers."""
 
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model="gemini-3.1-pro-preview",
         google_api_key=os.getenv("GEMINI_API_KEY"),
         temperature=0,
     )

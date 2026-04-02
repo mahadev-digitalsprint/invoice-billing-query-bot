@@ -12,6 +12,9 @@ Rules:
 - The context contains raw PDF text snippets retrieved from the vector database.
 - When a question matches multiple snippets, combine only the supported information.
 - If you compute a total, only use values that appear in the context and show the result with citations.
+- When the user asks for a comparison, summary across multiple files, or number-heavy output, prefer a markdown table.
+- For markdown tables, include citations inside the relevant cells or add a citation column.
+- For simple direct questions, use normal text instead of a table.
 - Keep answers concise and easy to scan.
 
 <CONTEXT>

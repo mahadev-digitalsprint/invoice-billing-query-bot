@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
+  ArrowDown,
   Bot,
   ChevronDown,
   FileText,
@@ -149,11 +150,12 @@ export default function App() {
     setError("");
 
     try {
-      const [dashboardResponse, filesResponse, historyResponse] = await Promise.all([
-        fetch(apiUrl("/api/dashboard")),
-        fetch(apiUrl("/api/files")),
-        fetch(apiUrl(`/api/history/${sessionIdRef.current}`)),
-      ]);
+      const [dashboardResponse, filesResponse, historyResponse] =
+        await Promise.all([
+          fetch(apiUrl("/api/dashboard")),
+          fetch(apiUrl("/api/files")),
+          fetch(apiUrl(`/api/history/${sessionIdRef.current}`)),
+        ]);
 
       const dashboardData = (await readJsonOrThrow(
         dashboardResponse,
@@ -319,9 +321,9 @@ export default function App() {
   }
 
   return (
-    <main className="grain-overlay min-h-screen">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 p-6 shadow-glow backdrop-blur sm:p-8">
+    <main className="grain-overlay h-screen overflow-hidden">
+      <div className="mx-auto flex h-screen max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+        <header className="relative z-20 shrink-0 overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 p-6 shadow-glow backdrop-blur sm:p-8">
           <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.20),transparent_58%)] lg:block" />
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
@@ -354,71 +356,73 @@ export default function App() {
           </div>
         </header>
 
-        <section className="mt-6 grid gap-6 lg:items-start lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-primary" />
-                  Index PDFs
-                </CardTitle>
-                <CardDescription>
-                  Upload one or more billing documents and rebuild the vector
-                  index in one step.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <label className="block rounded-[1.5rem] border border-dashed border-border bg-secondary/40 p-4 text-sm text-slate-600 ">
-                  <span className="mb-2 block font-medium text-slate-900">
-                    Choose PDF files
-                  </span>
-                  <Input
-                    className="cursor-pointer"
-                    accept=".pdf"
-                    multiple
-                    ref={uploadInputRef}
-                    type="file"
-                    onChange={(event) =>
-                      setUploadQueue(Array.from(event.target.files ?? []))
-                    }
-                  />
-                </label>
+        <section className="mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="grid mt-6 gap-6 lg:items-start lg:grid-cols-[360px_minmax(0,1fr)]">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5 text-primary" />
+                    Index PDFs
+                  </CardTitle>
+                  <CardDescription>
+                    Upload one or more billing documents and rebuild the vector
+                    index in one step.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <label className="block rounded-[1.5rem] border border-dashed border-border bg-secondary/40 p-4 text-sm text-slate-600 ">
+                    <span className="mb-2 block font-medium text-slate-900">
+                      Choose PDF files
+                    </span>
+                    <Input
+                      className="cursor-pointer"
+                      accept=".pdf"
+                      multiple
+                      ref={uploadInputRef}
+                      type="file"
+                      onChange={(event) =>
+                        setUploadQueue(Array.from(event.target.files ?? []))
+                      }
+                    />
+                  </label>
 
-                {!!uploadQueue.length && (
-                  <div className="flex flex-wrap gap-2 cursor-pointer">
-                    {uploadQueue.map((file) => (
-                      <Badge key={file.name} variant="secondary">
-                        {file.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <Button
-                  className="w-full"
-                  disabled={isUploading}
-                  onClick={handleUpload}
-                >
-                  {isUploading ? (
-                    <>
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
-                      Indexing documents
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4" />
-                      Upload and index
-                    </>
+                  {!!uploadQueue.length && (
+                    <div className="flex flex-wrap gap-2 cursor-pointer">
+                      {uploadQueue.map((file) => (
+                        <Badge key={file.name} variant="secondary">
+                          {file.name}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
-                </Button>
 
-                {uploadStatus && (
-                  <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    {uploadStatus}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  <Button
+                    className="w-full"
+                    disabled={isUploading}
+                    onClick={handleUpload}
+                  >
+                    {isUploading ? (
+                      <>
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                        Indexing documents
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Upload and index
+                      </>
+                    )}
+                  </Button>
+
+                  {uploadStatus && (
+                    <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      {uploadStatus}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
             <Card>
               <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -466,8 +470,7 @@ export default function App() {
               </CardContent>
             </Card>
           </div>
-
-          <Card className="overflow-hidden">
+          <Card className="mt-6">
             <CardHeader className="border-b border-border/70 bg-white/50">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -494,15 +497,6 @@ export default function App() {
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              {error && (
-                <div className="mx-6 mt-6 flex items-start gap-3 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
 
               <div className="p-4 sm:p-6">
                 <div className="rounded-[1.75rem] border border-border/80 bg-white/80 p-3 shadow-sm">
@@ -537,35 +531,63 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </CardHeader>
+          </Card>
+          <Card className="mt-6">
+            <CardContent className="p-0">
+              {error && (
+                <div className="mx-6 mt-6 flex items-start gap-3 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               {(isLoading || messages.length > 0 || isSending) && (
                 <>
                   <Separator />
 
-                  <div className="max-h-[52rem] overflow-y-auto px-6 py-6">
-                    {isLoading ? (
-                      <EmptyBlock
-                        icon={<LoaderCircle className="h-5 w-5 animate-spin" />}
-                        title="Loading workspace"
-                        description="Fetching indexed files, dashboard stats, and your session history."
-                      />
-                    ) : (
-                      <div className="space-y-4">
-                        {messages.map((message, index) => (
-                          <MessageBubble
-                            key={`${message.role}-${index}`}
-                            message={message}
-                          />
-                        ))}
-                        {isSending && (
-                          <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
-                            <LoaderCircle className="h-4 w-4 animate-spin" />
-                            Searching the indexed documents...
-                          </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                      </div>
-                    )}
+                  <div className="relative">
+                    <div className="max-h-[52rem] overflow-y-auto px-6 py-6">
+                      {isLoading ? (
+                        <EmptyBlock
+                          icon={
+                            <LoaderCircle className="h-5 w-5 animate-spin" />
+                          }
+                          title="Loading workspace"
+                          description="Fetching indexed files, dashboard stats, and your session history."
+                        />
+                      ) : (
+                        <div className="space-y-4">
+                          {messages.map((message, index) => (
+                            <MessageBubble
+                              key={`${message.role}-${index}`}
+                              message={message}
+                            />
+                          ))}
+                          {isSending && (
+                            <div className="flex items-center gap-3 rounded-[1.5rem] bg-secondary/60 px-4 py-3 text-sm text-slate-600">
+                              <LoaderCircle className="h-4 w-4 animate-spin" />
+                              Searching the indexed documents...
+                            </div>
+                          )}
+                          <div ref={messagesEndRef} />
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      aria-label="Scroll to bottom"
+                      onClick={() =>
+                        messagesEndRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "end",
+                        })
+                      }
+                      className="absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-full border border-slate-300/70 bg-slate-900/85 text-white shadow-lg transition hover:bg-slate-800"
+                    >
+                      <ArrowDown className="h-6 w-6" />
+                    </button>
                   </div>
                 </>
               )}
@@ -660,6 +682,32 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               <ol className="mb-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-700 last:mb-0">
                 {children}
               </ol>
+            ),
+            table: ({ children }) => (
+              <div className="mb-4 overflow-x-auto rounded-[1rem] border border-border/70 last:mb-0">
+                <table className="min-w-full border-collapse bg-white text-sm">
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead className="bg-slate-50 text-slate-900">{children}</thead>
+            ),
+            tbody: ({ children }) => (
+              <tbody className="text-slate-700">{children}</tbody>
+            ),
+            tr: ({ children }) => (
+              <tr className="border-b border-border/60 last:border-b-0">
+                {children}
+              </tr>
+            ),
+            th: ({ children }) => (
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-4 py-3 align-top leading-6">{children}</td>
             ),
             li: ({ children }) => <li>{children}</li>,
             strong: ({ children }) => (
